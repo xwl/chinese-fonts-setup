@@ -144,7 +144,7 @@
   :group 'chinese-fonts-setup
   :type 'boolean)
 
-(defcustom cfs-use-face-font-rescale (eq system-type 'gnu/linux)
+(defcustom cfs-use-face-font-rescale nil
   "是否通过设定 `face-font-rescale-alist' 来达到中英文对齐。
 
 在 window 平台下，将这个变量设置为 t 会导致 chinese-fonts-setup
