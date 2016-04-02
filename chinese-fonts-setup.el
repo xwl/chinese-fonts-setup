@@ -188,8 +188,7 @@ The below is an example which is used to set symbol fonts:
 (defvar cfs--current-profile-name (car cfs-profiles)
   "Current profile name used by chinese-fonts-setup")
 
-(defvar cfs--fontsize-steps
-  (mapcar #'(lambda (x) 4) cfs-profiles)
+(defvar cfs--fontsize-steps (mapcar #'(lambda (x) 4) cfs-profiles)
   "用来保存每一个 profile 使用 `cfs--fontsizes-fallback' 中第几个字号组合。")
 
 (defconst cfs--fontsizes-fallback
@@ -557,11 +556,10 @@ The below is an example which is used to set symbol fonts:
              (cfs-set-font-with-saved-step))
     (message "%s doesn't exist." profile-name)))
 
-(defun cfs-switch-profile ()
-  (interactive)
-  (let ((profile
-         (ido-completing-read "Set chinese-fonts-setup profile to:" cfs-profiles)))
-    (cfs--select-profile profile)))
+(defun cfs-switch-profile (profile)
+  (interactive
+   (ido-completing-read "Set chinese-fonts-setup profile to:" cfs-profiles))
+  (cfs--select-profile profile))
 
 (defun cfs-next-profile (&optional step)
   (interactive)
@@ -597,6 +595,21 @@ The below is an example which is used to set symbol fonts:
                            cfs--fontsizes-fallback profile-name)
       (message "Ignore regenerate profile!"))))
 
+(defun cfs--determine-step-at-point ()
+  "Determin current effective step."
+  (let ((fontsizes-list (list-at-point))
+        (index 1)                       ; FIXME: count from 1 ?
+        (lst cfs--custom-set-fontsizes))
+    (while (consp lst)
+      (if (equal (car lst) fontsizes-list)
+          (setq lst nil)
+        (setq lst (cdr lst)
+              index (1+ index))))
+
+    (if (< (length cfs--custom-set-fontsizes) index)
+        (error "No valid step at point")
+      index)))
+
 (defun cfs-test-fontsize-at-point ()
   "Test fontsizes list at point, which is usd to edit fontsizes list"
   (interactive)
@@ -605,6 +618,8 @@ The below is an example which is used to set symbol fonts:
              (numberp (car fontsizes-list)))
         (progn
           (cfs--set-font fontsizes-list)
+          (cfs--save-fontsize-step cfs--current-profile-name
+                                   (cfs--determine-step-at-point))
           (cfs--show-font-effect fontsizes-list))
       ;; 如果当前 point 不在 profile 文件中的 `cfs--custom-set-fontsizes‘ 中
       ;; 使用一组预定义字体大小来查看字体效果。
